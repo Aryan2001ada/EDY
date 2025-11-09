@@ -1,249 +1,210 @@
 'use client'
 
-import { useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { FaUniversity, FaBook, FaQuestionCircle, FaUsers, FaChartLine } from 'react-icons/fa'
+import { useEffect, useState } from 'react'
+import { FaUniversity, FaBook, FaQuestionCircle, FaUsers, FaChartLine, FaCalendar, FaStar, FaArrowRight } from 'react-icons/fa'
 import Link from 'next/link'
-
-// Placeholder stats
-const STATS = {
-  totalUniversities: 12,
-  totalCourses: 156,
-  totalQuestions: 3420,
-  totalUsers: 1245,
-  activeSubscriptions: 342,
-}
+import { getAnalytics } from '@/actions/analytics'
+import { AdminStats } from '@/types'
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
-  const [activeTab, setActiveTab] = useState<'overview' | 'universities' | 'courses' | 'questions'>('overview')
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  if (status === 'loading') {
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  async function loadStats() {
+    const result = await getAnalytics()
+    if (result.success && result.data) {
+      setStats(result.data)
+    }
+    setLoading(false)
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center h-screen">
         <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Access Denied
-          </h1>
-          <p className="text-gray-600 mb-6">
-            You must be signed in to access the admin panel.
-          </p>
-          <Link
-            href="/auth/signin"
-            className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700"
-          >
-            Sign In
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Manage universities, courses, and exam questions
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Admin Dashboard
+        </h1>
+        <p className="text-gray-600">
+          Welcome to the ExamPrep Admin Console
+        </p>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      {/* Stats Grid */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <FaUniversity className="text-primary-600 text-2xl" />
-              <span className="text-3xl font-bold text-gray-900">
-                {STATS.totalUniversities}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaUniversity className="text-blue-600 text-xl" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalUniversities}</span>
             </div>
-            <p className="text-gray-600">Universities</p>
+            <p className="text-gray-600 font-medium">Universities</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <FaBook className="text-primary-600 text-2xl" />
-              <span className="text-3xl font-bold text-gray-900">
-                {STATS.totalCourses}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <FaBook className="text-green-600 text-xl" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalCourses}</span>
             </div>
-            <p className="text-gray-600">Courses</p>
+            <p className="text-gray-600 font-medium">Courses</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <FaQuestionCircle className="text-primary-600 text-2xl" />
-              <span className="text-3xl font-bold text-gray-900">
-                {STATS.totalQuestions}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <FaQuestionCircle className="text-purple-600 text-xl" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalQuestions}</span>
             </div>
-            <p className="text-gray-600">Questions</p>
+            <p className="text-gray-600 font-medium">Questions</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <FaUsers className="text-primary-600 text-2xl" />
-              <span className="text-3xl font-bold text-gray-900">
-                {STATS.totalUsers}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FaUsers className="text-orange-600 text-xl" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalUsers}</span>
             </div>
-            <p className="text-gray-600">Total Users</p>
+            <p className="text-gray-600 font-medium">Total Users</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-2">
-              <FaChartLine className="text-primary-600 text-2xl" />
-              <span className="text-3xl font-bold text-gray-900">
-                {STATS.activeSubscriptions}
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <FaChartLine className="text-yellow-600 text-xl" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">{stats.activeSubscriptions}</span>
             </div>
-            <p className="text-gray-600">Subscriptions</p>
+            <p className="text-gray-600 font-medium">Active Subscriptions</p>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex gap-8">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`pb-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'overview'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('universities')}
-                className={`pb-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'universities'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Universities
-              </button>
-              <button
-                onClick={() => setActiveTab('courses')}
-                className={`pb-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'courses'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Courses
-              </button>
-              <button
-                onClick={() => setActiveTab('questions')}
-                className={`pb-4 px-2 border-b-2 font-medium transition-colors ${
-                  activeTab === 'questions'
-                    ? 'border-primary-600 text-primary-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Questions
-              </button>
-            </nav>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <span className="text-red-600 text-xl font-bold">$</span>
+              </div>
+              <span className="text-3xl font-bold text-gray-900">${stats.revenueThisMonth.toFixed(0)}</span>
+            </div>
+            <p className="text-gray-600 font-medium">Monthly Revenue</p>
           </div>
         </div>
+      )}
 
-        {/* Content Area */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          {activeTab === 'overview' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Quick Actions
-              </h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                <button className="bg-primary-600 text-white px-6 py-4 rounded-lg hover:bg-primary-700 transition-colors text-left">
-                  <h3 className="font-semibold mb-1">Add University</h3>
-                  <p className="text-sm text-primary-100">
-                    Create a new university entry
-                  </p>
-                </button>
-                <button className="bg-primary-600 text-white px-6 py-4 rounded-lg hover:bg-primary-700 transition-colors text-left">
-                  <h3 className="font-semibold mb-1">Add Course</h3>
-                  <p className="text-sm text-primary-100">
-                    Add a new course to a university
-                  </p>
-                </button>
-                <button className="bg-primary-600 text-white px-6 py-4 rounded-lg hover:bg-primary-700 transition-colors text-left">
-                  <h3 className="font-semibold mb-1">Add Questions</h3>
-                  <p className="text-sm text-primary-100">
-                    Upload new exam questions
-                  </p>
-                </button>
+      {/* Quick Actions */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Link
+            href="/admin/universities"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FaUniversity className="text-blue-600 text-xl" />
               </div>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
             </div>
-          )}
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Universities</h3>
+            <p className="text-sm text-gray-600">
+              Add and manage universities, set exam deadlines
+            </p>
+          </Link>
 
-          {activeTab === 'universities' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Manage Universities
-                </h2>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
-                  Add New
-                </button>
+          <Link
+            href="/admin/courses"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <FaBook className="text-green-600 text-xl" />
               </div>
-              <p className="text-gray-600">
-                University management interface will be implemented here.
-              </p>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
             </div>
-          )}
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Courses & Skills</h3>
+            <p className="text-sm text-gray-600">
+              Manage courses and organize topics by skills
+            </p>
+          </Link>
 
-          {activeTab === 'courses' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Manage Courses
-                </h2>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
-                  Add New
-                </button>
+          <Link
+            href="/admin/questions"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <FaQuestionCircle className="text-purple-600 text-xl" />
               </div>
-              <p className="text-gray-600">
-                Course management interface will be implemented here.
-              </p>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
             </div>
-          )}
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Question Bank</h3>
+            <p className="text-sm text-gray-600">
+              Create and edit questions with rich text, LaTeX, and code
+            </p>
+          </Link>
 
-          {activeTab === 'questions' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Manage Questions
-                </h2>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700">
-                  Upload Questions
-                </button>
+          <Link
+            href="/admin/calendar"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FaCalendar className="text-orange-600 text-xl" />
               </div>
-              <p className="text-gray-600">
-                Question management interface will be implemented here.
-              </p>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
             </div>
-          )}
-        </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Exam Calendar</h3>
+            <p className="text-sm text-gray-600">
+              Track and manage exam deadlines
+            </p>
+          </Link>
 
-        {/* Placeholder Notice */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <p className="text-blue-800">
-            <strong>Note:</strong> This is a placeholder admin interface. Full CRUD functionality will be implemented in the next phase.
-          </p>
+          <Link
+            href="/admin/reviews"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <FaStar className="text-yellow-600 text-xl" />
+              </div>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Reviews</h3>
+            <p className="text-sm text-gray-600">
+              Curate and feature student reviews
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/analytics"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <FaChartLine className="text-red-600 text-xl" />
+              </div>
+              <FaArrowRight className="text-gray-400 group-hover:text-primary-600 transition-colors" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Analytics</h3>
+            <p className="text-sm text-gray-600">
+              View platform insights and performance metrics
+            </p>
+          </Link>
         </div>
       </div>
     </div>
