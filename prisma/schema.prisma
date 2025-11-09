@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// User Management
+enum UserTier {
+  FREE
+  PAID
+}
+
+model User {
+  id                     String        @id @default(cuid())
+  name                   String?
+  email                  String        @unique
+  emailVerified          DateTime?
+  image                  String?
+  tier                   UserTier      @default(FREE)
+  subscriptionId         String?       @unique
+  subscriptionExpiresAt  DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  accounts               Account[]
+  sessions               Session[]
+  reviews                Review[]
+  bookmarkedCourses      UserCourse[]
+
+  @@index([email])
+  @@index([tier])
+}
+
+// Core Platform Entities
+model University {
+  id               String    @id @default(cuid())
+  name             String    @unique
+  examDeadlineDate DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  courses          Course[]
+
+  @@index([name])
+}
+
+model Course {
+  id             String   @id @default(cuid())
+  universityId   String
+  courseCode     String
+  summary        String?  @db.Text
+  totalQuestions Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  university     University    @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  skills         Skill[]
+  reviews        Review[]
+  bookmarkedBy   UserCourse[]
+
+  @@unique([universityId, courseCode])
+  @@index([universityId])
+  @@index([courseCode])
+}
+
+model Skill {
+  id           String   @id @default(cuid())
+  courseId     String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questionPages QuestionPage[]
+
+  @@index([courseId])
+}
+
+model QuestionPage {
+  id         String   @id @default(cuid())
+  skillId    String
+  questions  Json     // Array of 4 questions
+  createdAt  DateTime @default(now())
+
+  skill      Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+  @@index([createdAt])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  rating      Int      // 1-5 rating
+  text        String   @db.Text
+  isFeatured  Boolean  @default(false)
+  submittedAt DateTime @default(now())
+
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([isFeatured])
+}
+
+// User bookmarks/saved courses
+model UserCourse {
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
